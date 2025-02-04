@@ -1,0 +1,29 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@react-three/drei": "^9.121.4",
+    "@react-three/fiber": "^8.17.14",
+    "cesium": "^1.125.0",
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "three": "^0.173.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "yarn@1.22.22+sha1.ac34549e6aa8e7ead463a7407e1c7390f61a6610",
+  "devDependencies": {
+    "@types/react": "^19.0.8",
+    "@types/three": "^0.173.0",
+    "eslint": "^9",
+    "eslint-config-next": "15.1.6",
+    "tsx": "^4.19.2",
+    "typescript": "5.7.3"
+  }
+}

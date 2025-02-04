@@ -1,0 +1,373 @@
+{
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 3216,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 848,
+      "max": [
+        1.0,
+        -0.173538699746132,
+        1.0
+      ],
+      "min": [
+        -1.0,
+        -0.192572861909866,
+        -1.0
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 848,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5126,
+      "count": 848,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 4,
+      "componentType": 5125,
+      "count": 1776,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 5,
+      "componentType": 5126,
+      "count": 972,
+      "max": [
+        0.600000083446503,
+        0.192572876811028,
+        0.800000309944153
+      ],
+      "min": [
+        -0.600000083446503,
+        -0.187544867396355,
+        -0.800000309944153
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 6,
+      "componentType": 5126,
+      "count": 972,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 7,
+      "componentType": 5126,
+      "count": 972,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 8,
+      "componentType": 5125,
+      "count": 900,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 9,
+      "componentType": 5126,
+      "count": 600,
+      "max": [
+        0.579266488552094,
+        0.0556256659328938,
+        0.779266476631165
+      ],
+      "min": [
+        -0.590594112873077,
+        -0.17174406349659,
+        -0.790594100952148
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 10,
+      "componentType": 5126,
+      "count": 600,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 11,
+      "componentType": 5126,
+      "count": 600,
+      "type": "VEC2"
+    }
+  ],
+  "asset": {
+    "generator": "Substance Painter 2019.2.1",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 12864,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 10176,
+      "byteOffset": 12864,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 10176,
+      "byteOffset": 23040,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 6784,
+      "byteOffset": 33216,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 7104,
+      "byteOffset": 40000,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 11664,
+      "byteOffset": 47104,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 11664,
+      "byteOffset": 58768,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 7776,
+      "byteOffset": 70432,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 3600,
+      "byteOffset": 78208,
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 7200,
+      "byteOffset": 81808,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 7200,
+      "byteOffset": 89008,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 4800,
+      "byteOffset": 96208,
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 101008,
+      "uri": "test1.bin"
+    }
+  ],
+  "images": [
+    {
+      "uri": "Building_baseColor.png"
+    },
+    {
+      "uri": "Building_occlusionRoughnessMetallic.png"
+    },
+    {
+      "uri": "Building_normal.png"
+    },
+    {
+      "uri": "Building_emissive.png"
+    }
+  ],
+  "materials": [
+    {
+      "alphaMode": "OPAQUE",
+      "name": "Billboard",
+      "pbrMetallicRoughness": {}
+    },
+    {
+      "alphaMode": "OPAQUE",
+      "emissiveFactor": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "emissiveTexture": {
+        "index": 3
+      },
+      "name": "Building",
+      "normalTexture": {
+        "index": 2
+      },
+      "occlusionTexture": {
+        "index": 1
+      },
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicRoughnessTexture": {
+          "index": 1
+        }
+      }
+    },
+    {
+      "alphaMode": "OPAQUE",
+      "name": "Floor",
+      "pbrMetallicRoughness": {}
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Floor",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 2,
+            "POSITION": 1,
+            "TEXCOORD_0": 3
+          },
+          "indices": 0,
+          "material": 2,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Building",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 6,
+            "POSITION": 5,
+            "TEXCOORD_0": 7
+          },
+          "indices": 4,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    },
+    {
+      "name": "Billboard",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 10,
+            "POSITION": 9,
+            "TEXCOORD_0": 11
+          },
+          "indices": 8,
+          "material": 1,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1,
+        3,
+        5
+      ],
+      "name": "Test_Model_1.obj",
+      "scale": [
+        5.00936079025269,
+        5.00936079025269,
+        5.00936079025269
+      ],
+      "translation": [
+        0.0,
+        0.936593949794769,
+        0.0
+      ]
+    },
+    {
+      "children": [
+        2
+      ],
+      "name": "g Floor"
+    },
+    {
+      "mesh": 0,
+      "name": "Floor"
+    },
+    {
+      "children": [
+        4
+      ],
+      "name": "g Building"
+    },
+    {
+      "mesh": 1,
+      "name": "Building"
+    },
+    {
+      "children": [
+        6
+      ],
+      "name": "g Billboard"
+    },
+    {
+      "mesh": 2,
+      "name": "Billboard"
+    }
+  ],
+  "samplers": [
+    {
+      "magFilter": 9729,
+      "minFilter": 9985,
+      "wrapS": 10497,
+      "wrapT": 10497
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "sampler": 0,
+      "source": 0
+    },
+    {
+      "sampler": 0,
+      "source": 1
+    },
+    {
+      "sampler": 0,
+      "source": 2
+    },
+    {
+      "sampler": 0,
+      "source": 3
+    }
+  ]
+}
