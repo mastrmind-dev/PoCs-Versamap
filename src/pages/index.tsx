@@ -13,6 +13,7 @@ import WithCoordinates from "../components/WithCoordinates";
 import TwoDMap from "../components/twoDMap";
 import OrthoCam from "../components/OrthoCam";
 import AfricaMap from "../components/SVGAfrica";
+import SingleMeshDifferentMaterials from "../components/test/SingleMeshDifferentMaterials";
 
 const Map = dynamic(() => import("../components/LeafletMap"), { ssr: false });
 
@@ -26,14 +27,15 @@ const Home = () => {
       <h1>3D Model with Grid Overlay</h1>
       {/* <GridOverlay /> */}
       {/* <LocationTracker /> */}
-      {/* <WithCoordinates /> */}
+      <WithCoordinates />
       {/* <TwoDMap /> */}
       {/* <OrthoCam /> */}
-      <AfricaMap />
+      {/* <AfricaMap /> */}
       {/* <LeafletWithGLB /> */}
       {/* <Map /> */}
       {/* <Land /> */}
       {/* <FBXViewer /> */}
+      {/* <SingleMeshDifferentMaterials /> */}
     </div>
   );
 };

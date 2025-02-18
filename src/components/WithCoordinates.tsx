@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
+import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
 const WithCoordinates = () => {
@@ -23,37 +25,127 @@ const WithCoordinates = () => {
 
   useEffect(() => {
     const camera = new THREE.PerspectiveCamera(
-      75,
+      100,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
     );
     cameraRef.current = camera;
     const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current });
+    // renderer.toneMapping = THREE.LinearToneMapping; // Linear tone mapping
+    // renderer.toneMappingExposure = 1.0; // Exposure equivalent (image shows 0, but default is usually 1)
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    const neutralEnvironment = pmremGenerator.fromScene(
+      new RoomEnvironment()
+    ).texture;
+
+    // Ambient Light - softens shadows and brightens everything
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 10, 7.5);
-    scene.add(directionalLight);
+    // const spotlight = new THREE.SpotLight(0xffffff, 1, 10, Math.PI / 6, 0.5, 2);
+    // spotlight.position.set(0, 5, 0); // Position the spotlight
+    // spotlight.target.position.set(10, 0, 10); // Set the target for the spotlight to focus on
+    // scene.add(spotlight);
+    // scene.add(spotlight.target); // Add the spotlight's target to the scene
 
-    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-    pointLight.position.set(10, 20, 10);
-    scene.add(pointLight);
+    // Directional Light - mimics sunlight, casts shadows
+    const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight1.position.set(5, 10, 5);
+    directionalLight1.castShadow = true;
+    scene.add(directionalLight1);
 
-    const spotLight = new THREE.SpotLight(0xffffff, 1);
-    spotLight.position.set(-10, 20, -10);
-    spotLight.angle = Math.PI / 6;
-    scene.add(spotLight);
+    const orbitControls = new OrbitControls(camera, renderer.domElement);
+    orbitControls.maxPolarAngle = Math.PI / 2;
 
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.maxPolarAngle = Math.PI / 2;
+    const fpsControls = new PointerLockControls(camera, renderer.domElement);
+
+    // Movement settings
+    const movementSpeed = 0.01;
+    const velocity = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+    const move = { forward: false, backward: false, left: false, right: false };
+
+    // Event Listeners for First-Person Movement
+    document.addEventListener("keydown", (event) => {
+      switch (event.code) {
+        case "KeyW":
+          move.forward = true;
+          break;
+        case "KeyS":
+          move.backward = true;
+          break;
+        case "KeyA":
+          move.left = true;
+          break;
+        case "KeyD":
+          move.right = true;
+          break;
+        case "KeyO":
+          toggleControls();
+          break; // Switch mode
+      }
+    });
+    document.addEventListener("keyup", (event) => {
+      switch (event.code) {
+        case "KeyW":
+          move.forward = false;
+          break;
+        case "KeyS":
+          move.backward = false;
+          break;
+        case "KeyA":
+          move.left = false;
+          break;
+        case "KeyD":
+          move.right = false;
+          break;
+      }
+    });
+
+    // Toggle Between Orbit and First-Person Controls
+    let usingFPSControls = false;
+
+    function toggleControls() {
+      if (usingFPSControls) {
+        // Switch to Orbit Controls
+        fpsControls.unlock(); // Unlock pointer lock
+        orbitControls.enabled = true;
+      } else {
+        // Switch to First-Person Controls
+        fpsControls.lock();
+        orbitControls.enabled = false;
+      }
+      usingFPSControls = !usingFPSControls;
+    }
+
+    // Click to Enable First-Person Mode
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "KeyO" && !usingFPSControls) {
+        fpsControls.lock();
+        usingFPSControls = true;
+        orbitControls.enabled = false;
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.code === "KeyP" && usingFPSControls) {
+        fpsControls.unlock();
+        usingFPSControls = false;
+        orbitControls.enabled = true;
+      }
+    });
+
+    // scene.environment = neutralEnvironment;
+    // scene.background = neutralEnvironment;
 
     const loader = new GLTFLoader();
-    loader.load("/TestFBX/Mesh_all.glb", (gltf) => {
+    loader.load("/FullMapV4.glb", (gltf) => {
+      // loader.load("/TestFBX/Mesh_all.glb", (gltf) => {
       const model = gltf.scene;
+      model.scale.set(3, 3, 3);
+
       scene.add(model);
       const boundingBox = new THREE.Box3().setFromObject(model);
       boundingBoxRef.current = boundingBox;
@@ -63,19 +155,108 @@ const WithCoordinates = () => {
       const center = new THREE.Vector3();
       boundingBox.getCenter(center);
 
+      // add random colors to meshes
+      const applyRandomColors = (object) => {
+        if (object instanceof THREE.Mesh) {
+          object.material = new THREE.MeshStandardMaterial({
+            color: new THREE.Color(0x9e311a), // Light brown color
+            roughness: 0.5, // Moderate roughness for realistic surface reflection
+            metalness: 0.2, // A bit of metallic look
+            // color: new THREE.Color(Math.random(), Math.random(), Math.random()),
+            // roughness: 0.5, // Moderate roughness for realistic surface reflection
+            // metalness: 0.2, // A bit of metallic look
+            // emissive: new THREE.Color(0, 0, 0), // No em
+          });
+        }
+        // if (object.children && object.children.length > 0) {
+        //   object.children.forEach((child) => applyRandomColors(child));
+        // }
+      };
+
+      // applyRandomColors(model);
+
+      // traverse though meshes
+      model.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          console.log("child:::", child);
+          // child.material = new THREE.MeshBasicMaterial({ color: 0x00ffff });
+          // child.castShadow = false;
+          // child.receiveShadow = false;
+          // applyRandomColors(child);
+          child.material.envMap = neutralEnvironment;
+          child.material.needsUpdate = true;
+        }
+      });
+
       const gridSize = Math.max(size.x, size.z);
-      const gridDivistions = 10; // number of grid cells, adjust as needed
+      const gridDivistions = 400; // number of grid cells, adjust as needed
       cellSizeRef.current = gridSize / gridDivistions;
       const gridHelper = new THREE.GridHelper(gridSize, gridDivistions);
-      gridHelper.position.set(center.x, boundingBox.min.y, center.z); // Align to bottom of model (y-axis)
+      gridHelper.position.set(center.x, boundingBox.min.y + 0.3, center.z); // Align to bottom of model (y-axis)
+      gridHelper.material.color.set(0xff0000); // Set grid color to red
       scene.add(gridHelper);
 
       camera.position.set(0, 10, 20);
       camera.lookAt(0, 0, 0);
 
+      canvasRef.current.requestPointerLock();
+
+      // Keyboard controls for movement (WASD)
+      // let moveForward = false,
+      //   moveBackward = false,
+      //   strafeLeft = false,
+      //   strafeRight = false;
+      // document.addEventListener("keydown", (event) => {
+      //   switch (event.key) {
+      //     case "w":
+      //       moveForward = true;
+      //       break;
+      //     case "s":
+      //       moveBackward = true;
+      //       break;
+      //     case "a":
+      //       strafeLeft = true;
+      //       break;
+      //     case "d":
+      //       strafeRight = true;
+      //       break;
+      //   }
+      // });
+      // document.addEventListener("keyup", (event) => {
+      //   switch (event.key) {
+      //     case "w":
+      //       moveForward = false;
+      //       break;
+      //     case "s":
+      //       moveBackward = false;
+      //       break;
+      //     case "a":z
+      //       strafeLeft = false;
+      //       break;
+      //     case "d":
+      //       strafeRight = false;
+      //       break;
+      //   }
+      // });
+
       const animate = () => {
         requestAnimationFrame(animate);
-        controls.update();
+        if (usingFPSControls) {
+          // First-Person Movement
+          direction.z = Number(move.forward) - Number(move.backward);
+          direction.x = Number(move.right) - Number(move.left);
+          direction.normalize(); // Keep speed consistent
+
+          velocity.x -= velocity.x * 0.1; // Smooth deceleration
+          velocity.z -= velocity.z * 0.1;
+          velocity.addScaledVector(direction, movementSpeed);
+
+          fpsControls.moveRight(velocity.x);
+          fpsControls.moveForward(velocity.z);
+        } else {
+          // Orbit Controls Update
+          orbitControls.update();
+        }
         renderer.render(scene, camera);
       };
       animate();
@@ -158,6 +339,7 @@ const WithCoordinates = () => {
     raycaster.setFromCamera(mouse, cameraRef.current);
 
     const intersects = raycaster.intersectObjects(scene.children, true);
+    console.log("intersects:::", intersects);
     const intersectedObject = intersects
       .map((intersect) => {
         return intersect.object;
@@ -180,8 +362,8 @@ const WithCoordinates = () => {
     const box = new THREE.Box3().setFromObject(intersectedObject);
     const minX = Math.round(box.min.x / cellSize);
     const maxX = Math.round(box.max.x / cellSize);
-    const minZ = Math.round(box.min.z / cellSize);
-    const maxZ = Math.round(box.max.z / cellSize);
+    const maxZ = -Math.round(box.min.z / cellSize);
+    const minZ = -Math.round(box.max.z / cellSize);
 
     setMinX(minX);
     setMaxX(maxX);
