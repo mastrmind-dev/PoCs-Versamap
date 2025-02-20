@@ -83,9 +83,6 @@ const WithCoordinates = () => {
         case "KeyD":
           move.right = true;
           break;
-        case "KeyO":
-          toggleControls();
-          break; // Switch mode
       }
     });
     document.addEventListener("keyup", (event) => {
@@ -108,22 +105,12 @@ const WithCoordinates = () => {
     // Toggle Between Orbit and First-Person Controls
     let usingFPSControls = false;
 
-    function toggleControls() {
-      if (usingFPSControls) {
-        // Switch to Orbit Controls
-        fpsControls.unlock(); // Unlock pointer lock
-        orbitControls.enabled = true;
-      } else {
-        // Switch to First-Person Controls
-        fpsControls.lock();
-        orbitControls.enabled = false;
-      }
-      usingFPSControls = !usingFPSControls;
-    }
-
     // Click to Enable First-Person Mode
     document.addEventListener("keydown", (event) => {
       if (event.code === "KeyO" && !usingFPSControls) {
+        camera.position.set(1, 3, 50); // Example position, adjust as needed
+        camera.lookAt(new THREE.Vector3(0, 0, 0)); // Example target, adjust as needed
+
         fpsControls.lock();
         usingFPSControls = true;
         orbitControls.enabled = false;
@@ -192,12 +179,11 @@ const WithCoordinates = () => {
       const gridDivistions = 400; // number of grid cells, adjust as needed
       cellSizeRef.current = gridSize / gridDivistions;
       const gridHelper = new THREE.GridHelper(gridSize, gridDivistions);
-      gridHelper.position.set(center.x, boundingBox.min.y + 0.3, center.z); // Align to bottom of model (y-axis)
-      gridHelper.material.color.set(0xff0000); // Set grid color to red
+      gridHelper.position.set(center.x, boundingBox.min.y + 8, center.z); // Align to bottom of model (y-axis)
+      gridHelper.material.color.set(0x00008b); // Set grid color to red
       scene.add(gridHelper);
 
-      camera.position.set(0, 10, 20);
-      camera.lookAt(0, 0, 0);
+      camera.position.set(0, 100, 0);
 
       canvasRef.current.requestPointerLock();
 

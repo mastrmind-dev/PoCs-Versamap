@@ -1,19 +1,10 @@
 // "use client";
 // pages/index.tsx
-import { useEffect } from "react";
-import GridOverlay from "../components/GridOverlay";
-import LocationTracker from "../components/LocationTracker";
-import * as MESH from "../components/Meshes";
-import Land from "../components/Land";
-import FBXViewer from "../components/FBXViewer";
-import LeafletWithGLB from "../components/LeafletMap";
 
 import dynamic from "next/dynamic";
+import TestWithImage from "../components/TestWithImage";
 import WithCoordinates from "../components/WithCoordinates";
-import TwoDMap from "../components/twoDMap";
-import OrthoCam from "../components/OrthoCam";
-import AfricaMap from "../components/SVGAfrica";
-import SingleMeshDifferentMaterials from "../components/test/SingleMeshDifferentMaterials";
+import WithCoordinates2D from "../components/WithCoordinates2D";
 
 const Map = dynamic(() => import("../components/LeafletMap"), { ssr: false });
 
@@ -27,7 +18,9 @@ const Home = () => {
       <h1>3D Model with Grid Overlay</h1>
       {/* <GridOverlay /> */}
       {/* <LocationTracker /> */}
+      {/* <TestWithImage /> */}
       <WithCoordinates />
+      {/* <WithCoordinates2D /> */}
       {/* <TwoDMap /> */}
       {/* <OrthoCam /> */}
       {/* <AfricaMap /> */}
