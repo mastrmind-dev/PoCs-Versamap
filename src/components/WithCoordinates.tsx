@@ -19,6 +19,8 @@ const WithCoordinates = () => {
   const [minZ, setMinZ] = useState<number | null>(null);
   const [maxZ, setMaxZ] = useState<number | null>(null);
 
+  const [lastCamPos, setLastCamPos] = useState<THREE.Vector3 | null>();
+
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   const scene = new THREE.Scene();
@@ -58,7 +60,7 @@ const WithCoordinates = () => {
     scene.add(directionalLight1);
 
     const orbitControls = new OrbitControls(camera, renderer.domElement);
-    orbitControls.maxPolarAngle = Math.PI / 2;
+    orbitControls.maxPolarAngle = Math.PI / 2 - 0.02;
 
     const fpsControls = new PointerLockControls(camera, renderer.domElement);
 
@@ -108,7 +110,8 @@ const WithCoordinates = () => {
     // Click to Enable First-Person Mode
     document.addEventListener("keydown", (event) => {
       if (event.code === "KeyO" && !usingFPSControls) {
-        camera.position.set(1, 3, 50); // Example position, adjust as needed
+        // setLastCamPos(camera.position.clone());
+        camera.position.set(camera.position.x, 3, camera.position.z); // Example position, adjust as needed
         camera.lookAt(new THREE.Vector3(0, 0, 0)); // Example target, adjust as needed
 
         fpsControls.lock();
@@ -123,6 +126,21 @@ const WithCoordinates = () => {
         orbitControls.enabled = true;
       }
     });
+
+    const handleVisibilityChange = () => {
+      console.log("visibility staate:::", document.visibilityState);
+      if (document.visibilityState === "visible" && usingFPSControls) {
+        fpsControls.lock();
+      }
+    };
+
+    window.addEventListener("focus", function () {
+      if (usingFPSControls) {
+        fpsControls.lock();
+      }
+    });
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     // scene.environment = neutralEnvironment;
     // scene.background = neutralEnvironment;
@@ -165,7 +183,6 @@ const WithCoordinates = () => {
       // traverse though meshes
       model.traverse((child) => {
         if (child instanceof THREE.Mesh) {
-          console.log("child:::", child);
           // child.material = new THREE.MeshBasicMaterial({ color: 0x00ffff });
           // child.castShadow = false;
           // child.receiveShadow = false;

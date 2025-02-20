@@ -2,7 +2,7 @@
 // pages/index.tsx
 
 import dynamic from "next/dynamic";
-import TestWithImage from "../components/TestWithImage";
+// import TestWithImage from "../components/TestWithImage";
 import WithCoordinates from "../components/WithCoordinates";
 import WithCoordinates2D from "../components/WithCoordinates2D";
 
