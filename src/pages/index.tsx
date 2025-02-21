@@ -22,12 +22,12 @@ const Home = () => {
         <h1
           style={{
             fontFamily: "'Orbitron', sans-serif",
-            color: "#61dafb",
-            textShadow: "0 0 10px #61dafb, 0 0 20px #61dafb, 0 0 30px #61dafb",
+            color: "black",
             textAlign: "center",
             margin: "20px 0",
             fontSize: "2.5rem",
-            // WebkitTextStroke: "1px #43dafb", // Add border to letters
+            fontWeight: 'bold',
+            textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)", // Add shadow
           }}
         >
           3D / 2D Map

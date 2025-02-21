@@ -18,6 +18,8 @@ const WithCoordinates2D = () => {
   const [minZ, setMinZ] = useState<number | null>(null);
   const [maxZ, setMaxZ] = useState<number | null>(null);
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   const scene = new THREE.Scene();
@@ -74,7 +76,43 @@ const WithCoordinates2D = () => {
     floorTexture.wrapS = THREE.RepeatWrapping;
     floorTexture.wrapT = THREE.RepeatWrapping;
     // floorTexture.repeat.set(10, 10);
-    const loader = new GLTFLoader();
+
+    const manager = new THREE.LoadingManager();
+    manager.onStart = function (url, itemsLoaded, itemsTotal) {
+      console.log(
+        "Started loading file: " +
+          url +
+          ".\nLoaded " +
+          itemsLoaded +
+          " of " +
+          itemsTotal +
+          " files."
+      );
+      setIsLoading(true);
+    };
+
+    manager.onLoad = function () {
+      console.log("Loading complete!");
+      setIsLoading(false);
+    };
+
+    manager.onProgress = function (url, itemsLoaded, itemsTotal) {
+      console.log(
+        "Loading file: " +
+          url +
+          ".\nLoaded " +
+          itemsLoaded +
+          " of " +
+          itemsTotal +
+          " files."
+      );
+    };
+
+    manager.onError = function (url) {
+      console.log("There was an error loading " + url);
+    };
+
+    const loader = new GLTFLoader(manager);
     loader.load("/TopViewV2.glb", (gltf) => {
       // loader.load("/TestFBX/Mesh_all.glb", (gltf) => {
       const model = gltf.scene;
@@ -278,23 +316,66 @@ const WithCoordinates2D = () => {
   };
 
   return (
-    <div style={{ border: "5px solid rgb(86, 188, 219)", borderRadius: "10px", padding: "20px" }}>
-      <div style={{ display: "flex", flexDirection: "row", gap: "20px" }}>
-      <h3 style={{ fontSize: "20px" }}>
-        CLICK ON A LAND TO GET GRID COORDINATES
-      </h3>
-      <p style={{ fontSize: "20px" }}>MinX: {minX}</p>
-      <p style={{ fontSize: "20px" }}>MaxX: {maxX}</p>
-      <p style={{ fontSize: "20px" }}>MinZ: {minZ}</p>
-      <p style={{ fontSize: "20px" }}>MaxZ: {maxZ}</p>
-      </div>
-      <canvas
-      ref={canvasRef}
+    <div
       style={{
-        backgroundImage: "url('/Ocean.jpg')",
-        backgroundSize: "cover",
+        // border: "5px solid rgb(86, 188, 219)",
+        borderRadius: "10px",
+        padding: "20px",
       }}
-      />
+    >
+      <div style={{ display: "flex", flexDirection: "row", gap: "20px" }}>
+        <h3 style={{ fontSize: "20px" }}>
+          CLICK ON A BUILDING TO GET GRID COORDINATES
+        </h3>
+        <p style={{ fontSize: "20px" }}>MinX: {minX}</p>
+        <p style={{ fontSize: "20px" }}>MaxX: {maxX}</p>
+        <p style={{ fontSize: "20px" }}>MinZ: {minZ}</p>
+        <p style={{ fontSize: "20px" }}>MaxZ: {maxZ}</p>
+      </div>
+      <div style={{ position: "relative" }}>
+        {isLoading && (
+          <>
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "50%",
+                transform: "translate(-50%, -50%)",
+                zIndex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                padding: "20px",
+                background: "white",
+                borderRadius: "8px",
+              }}
+            >
+              <div
+                className="spinner"
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  border: "4px solid rgba(0, 0, 0, 0.3)",
+                  borderTop: "4px solid black",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite",
+                  marginBottom: "10px",
+                }}
+              ></div>
+              Loading...
+            </div>
+            <style>
+              {`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}
+            </style>
+          </>
+        )}
+        <canvas ref={canvasRef} style={{ opacity: isLoading ? 0.5 : 1 }} />
+      </div>
     </div>
   );
 };
