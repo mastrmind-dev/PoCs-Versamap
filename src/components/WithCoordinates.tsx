@@ -36,7 +36,7 @@ const WithCoordinates = () => {
     const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current });
     // renderer.toneMapping = THREE.LinearToneMapping; // Linear tone mapping
     // renderer.toneMappingExposure = 1.0; // Exposure equivalent (image shows 0, but default is usually 1)
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth - 100, window.innerHeight);
 
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     const neutralEnvironment = pmremGenerator.fromScene(
@@ -71,7 +71,7 @@ const WithCoordinates = () => {
     const move = { forward: false, backward: false, left: false, right: false };
 
     // Event Listeners for First-Person Movement
-    document.addEventListener("keydown", (event) => {
+    const handleKeyDown = (event) => {
       switch (event.code) {
         case "KeyW":
           move.forward = true;
@@ -86,8 +86,11 @@ const WithCoordinates = () => {
           move.right = true;
           break;
       }
-    });
-    document.addEventListener("keyup", (event) => {
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    const handleKeyUp = (event) => {
       switch (event.code) {
         case "KeyW":
           move.forward = false;
@@ -102,43 +105,58 @@ const WithCoordinates = () => {
           move.right = false;
           break;
       }
-    });
+    };
+    document.addEventListener("keyup", handleKeyUp);
 
     // Toggle Between Orbit and First-Person Controls
     let usingFPSControls = false;
 
-    // Click to Enable First-Person Mode
-    document.addEventListener("keydown", (event) => {
+    const oHandler = (event) => {
       if (event.code === "KeyO" && !usingFPSControls) {
         // setLastCamPos(camera.position.clone());
         camera.position.set(camera.position.x, 3, camera.position.z); // Example position, adjust as needed
-        camera.lookAt(new THREE.Vector3(0, 0, 0)); // Example target, adjust as needed
+        camera.lookAt(new THREE.Vector3(0, 0, 10)); // Example target, adjust as needed
 
         fpsControls.lock();
         usingFPSControls = true;
         orbitControls.enabled = false;
       }
-    });
-    document.addEventListener("keydown", (event) => {
+    };
+    document.addEventListener("keydown", oHandler);
+
+    const pHandler = (event) => {
       if (event.code === "KeyP" && usingFPSControls) {
         fpsControls.unlock();
         usingFPSControls = false;
         orbitControls.enabled = true;
       }
-    });
+    };
+    document.addEventListener("keydown", pHandler);
+
+    const handlePointerLockChange = () => {
+      if (document.pointerLockElement === renderer.domElement) {
+        usingFPSControls = true;
+        orbitControls.enabled = false;
+      } else {
+        usingFPSControls = false;
+        orbitControls.enabled = true;
+      }
+    };
+
+    document.addEventListener("pointerlockchange", handlePointerLockChange);
 
     const handleVisibilityChange = () => {
-      console.log("visibility staate:::", document.visibilityState);
       if (document.visibilityState === "visible" && usingFPSControls) {
         fpsControls.lock();
       }
     };
 
-    window.addEventListener("focus", function () {
+    function handleFocus() {
       if (usingFPSControls) {
         fpsControls.lock();
       }
-    });
+    }
+    window.addEventListener("focus", handleFocus);
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
@@ -149,12 +167,10 @@ const WithCoordinates = () => {
     loader.load("/FullMapV4.glb", (gltf) => {
       // loader.load("/TestFBX/Mesh_all.glb", (gltf) => {
       const model = gltf.scene;
-      model.scale.set(3, 3, 3);
-
+      model.scale.set(4, 4, 4);
       scene.add(model);
       const boundingBox = new THREE.Box3().setFromObject(model);
       boundingBoxRef.current = boundingBox;
-      console.log("boundingbox:::", boundingBox);
       const size = new THREE.Vector3();
       boundingBox.getSize(size);
       const center = new THREE.Vector3();
@@ -196,51 +212,11 @@ const WithCoordinates = () => {
       const gridDivistions = 400; // number of grid cells, adjust as needed
       cellSizeRef.current = gridSize / gridDivistions;
       const gridHelper = new THREE.GridHelper(gridSize, gridDivistions);
-      gridHelper.position.set(center.x, boundingBox.min.y + 8, center.z); // Align to bottom of model (y-axis)
+      gridHelper.position.set(center.x, boundingBox.min.y + 10, center.z); // Align to bottom of model (y-axis)
       gridHelper.material.color.set(0x00008b); // Set grid color to red
       scene.add(gridHelper);
 
       camera.position.set(0, 100, 0);
-
-      canvasRef.current.requestPointerLock();
-
-      // Keyboard controls for movement (WASD)
-      // let moveForward = false,
-      //   moveBackward = false,
-      //   strafeLeft = false,
-      //   strafeRight = false;
-      // document.addEventListener("keydown", (event) => {
-      //   switch (event.key) {
-      //     case "w":
-      //       moveForward = true;
-      //       break;
-      //     case "s":
-      //       moveBackward = true;
-      //       break;
-      //     case "a":
-      //       strafeLeft = true;
-      //       break;
-      //     case "d":
-      //       strafeRight = true;
-      //       break;
-      //   }
-      // });
-      // document.addEventListener("keyup", (event) => {
-      //   switch (event.key) {
-      //     case "w":
-      //       moveForward = false;
-      //       break;
-      //     case "s":
-      //       moveBackward = false;
-      //       break;
-      //     case "a":z
-      //       strafeLeft = false;
-      //       break;
-      //     case "d":
-      //       strafeRight = false;
-      //       break;
-      //   }
-      // });
 
       const animate = () => {
         requestAnimationFrame(animate);
@@ -271,10 +247,20 @@ const WithCoordinates = () => {
     return () => {
       renderer.dispose();
       scene.clear();
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("click", onMouseClick);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keyup", handleKeyUp);
+      document.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("keydown", handleVisibilityChange);
+      document.removeEventListener("keydown", oHandler);
+      document.removeEventListener("keydown", pHandler);
     };
   }, []);
 
   const onMouseMove = (event) => {
+    if (!canvasRef.current) return;
     const canvasBounds = canvasRef.current.getBoundingClientRect();
     if (!canvasBounds) return;
 
@@ -295,7 +281,8 @@ const WithCoordinates = () => {
         return object instanceof THREE.Mesh;
       });
 
-    if (intersectedObject) {
+    const floorNames = ["S1", "S2", "S3", "S4"];
+    if (intersectedObject && !floorNames.includes(intersectedObject?.name)) {
       if (
         previousIntersectedRef.current &&
         previousIntersectedRef.current !== intersectedObject
@@ -342,7 +329,7 @@ const WithCoordinates = () => {
     raycaster.setFromCamera(mouse, cameraRef.current);
 
     const intersects = raycaster.intersectObjects(scene.children, true);
-    console.log("intersects:::", intersects);
+    // console.log("intersects:::", intersects);
     const intersectedObject = intersects
       .map((intersect) => {
         return intersect.object;
@@ -380,9 +367,17 @@ const WithCoordinates = () => {
   };
 
   return (
-    <div>
+    <div
+      style={{
+        border: "5px solid rgb(86, 188, 219)",
+        borderRadius: "10px",
+        padding: "20px",
+      }}
+    >
       <div style={{ display: "flex", flexDirection: "row", gap: "20px" }}>
-        <h3 style={{ fontSize: "20px" }}>GRID COORDINATES</h3>
+        <h3 style={{ fontSize: "20px" }}>
+          CLICK ON A BUILDING TO GET GRID COORDINATES
+        </h3>
         <p style={{ fontSize: "20px" }}>MinX: {minX}</p>
         <p style={{ fontSize: "20px" }}>MaxX: {maxX}</p>
         <p style={{ fontSize: "20px" }}>MinZ: {minZ}</p>

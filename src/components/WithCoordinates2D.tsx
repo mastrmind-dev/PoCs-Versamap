@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
-import { PointerLockControls } from "three/examples/jsm/controls/PointerLockControls";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 
@@ -34,7 +33,7 @@ const WithCoordinates2D = () => {
     const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current });
     // renderer.toneMapping = THREE.LinearToneMapping; // Linear tone mapping
     // renderer.toneMappingExposure = 1.0; // Exposure equivalent (image shows 0, but default is usually 1)
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(window.innerWidth - 100, window.innerHeight);
 
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     const neutralEnvironment = pmremGenerator.fromScene(
@@ -61,82 +60,11 @@ const WithCoordinates2D = () => {
     orbitControls.maxPolarAngle = Math.PI / 2;
     orbitControls.enableRotate = false;
 
-    const fpsControls = new PointerLockControls(camera, renderer.domElement);
-
     // Movement settings
     const movementSpeed = 0.01;
     const velocity = new THREE.Vector3();
     const direction = new THREE.Vector3();
     const move = { forward: false, backward: false, left: false, right: false };
-
-    // Event Listeners for First-Person Movement
-    document.addEventListener("keydown", (event) => {
-      switch (event.code) {
-        case "KeyW":
-          move.forward = true;
-          break;
-        case "KeyS":
-          move.backward = true;
-          break;
-        case "KeyA":
-          move.left = true;
-          break;
-        case "KeyD":
-          move.right = true;
-          break;
-        case "KeyO":
-          toggleControls();
-          break; // Switch mode
-      }
-    });
-    document.addEventListener("keyup", (event) => {
-      switch (event.code) {
-        case "KeyW":
-          move.forward = false;
-          break;
-        case "KeyS":
-          move.backward = false;
-          break;
-        case "KeyA":
-          move.left = false;
-          break;
-        case "KeyD":
-          move.right = false;
-          break;
-      }
-    });
-
-    // Toggle Between Orbit and First-Person Controls
-    let usingFPSControls = false;
-
-    function toggleControls() {
-      if (usingFPSControls) {
-        // Switch to Orbit Controls
-        fpsControls.unlock(); // Unlock pointer lock
-        orbitControls.enabled = true;
-      } else {
-        // Switch to First-Person Controls
-        fpsControls.lock();
-        orbitControls.enabled = false;
-      }
-      usingFPSControls = !usingFPSControls;
-    }
-
-    // Click to Enable First-Person Mode
-    document.addEventListener("keydown", (event) => {
-      if (event.code === "KeyO" && !usingFPSControls) {
-        fpsControls.lock();
-        usingFPSControls = true;
-        orbitControls.enabled = false;
-      }
-    });
-    document.addEventListener("keydown", (event) => {
-      if (event.code === "KeyP" && usingFPSControls) {
-        fpsControls.unlock();
-        usingFPSControls = false;
-        orbitControls.enabled = true;
-      }
-    });
 
     // scene.environment = neutralEnvironment;
     // scene.background = neutralEnvironment;
@@ -205,64 +133,9 @@ const WithCoordinates2D = () => {
 
       camera.position.set(0, 100, 0);
 
-      canvasRef.current.requestPointerLock();
-
-      // Keyboard controls for movement (WASD)
-      // let moveForward = false,
-      //   moveBackward = false,
-      //   strafeLeft = false,
-      //   strafeRight = false;
-      // document.addEventListener("keydown", (event) => {
-      //   switch (event.key) {
-      //     case "w":
-      //       moveForward = true;
-      //       break;
-      //     case "s":
-      //       moveBackward = true;
-      //       break;
-      //     case "a":
-      //       strafeLeft = true;
-      //       break;
-      //     case "d":
-      //       strafeRight = true;
-      //       break;
-      //   }
-      // });
-      // document.addEventListener("keyup", (event) => {
-      //   switch (event.key) {
-      //     case "w":
-      //       moveForward = false;
-      //       break;
-      //     case "s":
-      //       moveBackward = false;
-      //       break;
-      //     case "a":z
-      //       strafeLeft = false;
-      //       break;
-      //     case "d":
-      //       strafeRight = false;
-      //       break;
-      //   }
-      // });
-
       const animate = () => {
         requestAnimationFrame(animate);
-        if (usingFPSControls) {
-          // First-Person Movement
-          direction.z = Number(move.forward) - Number(move.backward);
-          direction.x = Number(move.right) - Number(move.left);
-          direction.normalize(); // Keep speed consistent
-
-          velocity.x -= velocity.x * 0.1; // Smooth deceleration
-          velocity.z -= velocity.z * 0.1;
-          velocity.addScaledVector(direction, movementSpeed);
-
-          fpsControls.moveRight(velocity.x);
-          fpsControls.moveForward(velocity.z);
-        } else {
-          // Orbit Controls Update
-          orbitControls.update();
-        }
+        orbitControls.update();
         renderer.render(scene, camera);
       };
       animate();
@@ -272,12 +145,15 @@ const WithCoordinates2D = () => {
     window.addEventListener("click", onMouseClick);
 
     return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("click", onMouseClick);
       renderer.dispose();
       scene.clear();
     };
   }, []);
 
   const onMouseMove = (event) => {
+    if (!canvasRef.current) return;
     const canvasBounds = canvasRef.current.getBoundingClientRect();
     if (!canvasBounds) return;
 
@@ -300,9 +176,14 @@ const WithCoordinates2D = () => {
 
     // console.log("intersected obj:::", intersectedObject);
 
-    const idsToExclude = [1072, 1073, 1074, 1075];
+    const floorNames = [
+      "polySurface4456_1",
+      "polySurface4435_1",
+      "polySurface4442_1",
+      "polySurface4449_1",
+    ];
     // console.log("intersected id:::", intersectedObject?.id);
-    if (intersectedObject && !idsToExclude.includes(intersectedObject?.id)) {
+    if (intersectedObject && !floorNames.includes(intersectedObject?.name)) {
       if (
         previousIntersectedRef.current &&
         previousIntersectedRef.current !== intersectedObject
@@ -366,7 +247,8 @@ const WithCoordinates2D = () => {
         return object instanceof THREE.Mesh;
       });
 
-    console.log("object:::", intersectedObject?.material?.color);
+    console.log("intersected object:::", intersectedObject);
+
     if (intersectedObject) {
       //   get the intersected object's coordinates
       const coordinates = getCoordinates(intersectedObject);
@@ -396,20 +278,22 @@ const WithCoordinates2D = () => {
   };
 
   return (
-    <div>
+    <div style={{ border: "5px solid rgb(86, 188, 219)", borderRadius: "10px", padding: "20px" }}>
       <div style={{ display: "flex", flexDirection: "row", gap: "20px" }}>
-        <h3 style={{ fontSize: "20px" }}>GRID COORDINATES</h3>
-        <p style={{ fontSize: "20px" }}>MinX: {minX}</p>
-        <p style={{ fontSize: "20px" }}>MaxX: {maxX}</p>
-        <p style={{ fontSize: "20px" }}>MinZ: {minZ}</p>
-        <p style={{ fontSize: "20px" }}>MaxZ: {maxZ}</p>
+      <h3 style={{ fontSize: "20px" }}>
+        CLICK ON A LAND TO GET GRID COORDINATES
+      </h3>
+      <p style={{ fontSize: "20px" }}>MinX: {minX}</p>
+      <p style={{ fontSize: "20px" }}>MaxX: {maxX}</p>
+      <p style={{ fontSize: "20px" }}>MinZ: {minZ}</p>
+      <p style={{ fontSize: "20px" }}>MaxZ: {maxZ}</p>
       </div>
       <canvas
-        ref={canvasRef}
-        style={{
-          backgroundImage: "url('/Ocean.jpg')",
-          backgroundSize: "cover",
-        }}
+      ref={canvasRef}
+      style={{
+        backgroundImage: "url('/Ocean.jpg')",
+        backgroundSize: "cover",
+      }}
       />
     </div>
   );
