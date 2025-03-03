@@ -28,7 +28,7 @@ const SingleMeshDifferentMaterials: React.FC = () => {
     // Load and Parse SVG File
     const loader = new SVGLoader();
     loader.load("/TopViewGroupedV2.svg", (data) => {
-      const firstGroup = data.xml.getElementsByTagName("g")[0];
+      const firstGroup = data.xml.getElementsByTagName("g")[1];
       console.log("firstGroup:::", firstGroup);
     });
 

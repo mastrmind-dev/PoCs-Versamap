@@ -6,6 +6,8 @@ import dynamic from "next/dynamic";
 import WithCoordinates from "../components/WithCoordinates";
 import WithCoordinates2D from "../components/WithCoordinates2D";
 import { useState } from "react";
+import MapWithAds from "../components/MapWithAds";
+import BuildingViewer from "../components/BuildingViewer";
 
 const Map = dynamic(() => import("../components/LeafletMap"), { ssr: false });
 
@@ -18,7 +20,7 @@ const Home = () => {
 
   return (
     <div>
-      <div>
+      {/* <div>
         <h1
           style={{
             fontFamily: "'Orbitron', sans-serif",
@@ -26,7 +28,7 @@ const Home = () => {
             textAlign: "center",
             margin: "20px 0",
             fontSize: "2.5rem",
-            fontWeight: 'bold',
+            fontWeight: "bold",
             textShadow: "2px 2px 4px rgba(0, 0, 0, 0.5)", // Add shadow
           }}
         >
@@ -103,11 +105,15 @@ const Home = () => {
             <br />• Scroll for zooming in and out
           </p>
         </div>
-      </div>
+      </div> */}
+      {/* <WithCoordinates /> */}
+      <BuildingViewer />
+      {/* <WithCoordinates2D /> */}
+      {/* <MapWithAds /> */}
       {/* <GridOverlay /> */}
       {/* <LocationTracker /> */}
       {/* <TestWithImage /> */}
-      <div
+      {/* <div
         style={{
           //   border: "2px solid #61dafb",
           // padding: "10px",
@@ -118,7 +124,8 @@ const Home = () => {
         }}
       >
         {isSwitched ? <WithCoordinates2D /> : <WithCoordinates />}
-      </div>
+      </div> */}
+      {/* <MapWithAds /> */}
       {/* <TwoDMap /> */}
       {/* <OrthoCam /> */}
       {/* <AfricaMap /> */}

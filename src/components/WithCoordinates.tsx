@@ -22,6 +22,8 @@ const WithCoordinates = () => {
   const [lastCamPos, setLastCamPos] = useState<THREE.Vector3 | null>();
   const [isLoading, setIsLoading] = useState(false);
 
+  const floorNames = ["S1", "S2", "S3", "S4"];
+
   const raycaster = new THREE.Raycaster();
   const mouse = new THREE.Vector2();
   const scene = new THREE.Scene();
@@ -66,7 +68,7 @@ const WithCoordinates = () => {
     const fpsControls = new PointerLockControls(camera, renderer.domElement);
 
     // Movement settings
-    const movementSpeed = 0.01;
+    const movementSpeed = 0.1;
     const velocity = new THREE.Vector3();
     const direction = new THREE.Vector3();
     const move = { forward: false, backward: false, left: false, right: false };
@@ -115,7 +117,7 @@ const WithCoordinates = () => {
     const oHandler = (event) => {
       if (event.code === "KeyO" && !usingFPSControls) {
         // setLastCamPos(camera.position.clone());
-        camera.position.set(camera.position.x, 3, camera.position.z); // Example position, adjust as needed
+        camera.position.set(camera.position.x, 10, camera.position.z); // Example position, adjust as needed
         camera.lookAt(new THREE.Vector3(0, 0, 10)); // Example target, adjust as needed
 
         fpsControls.lock();
@@ -200,11 +202,11 @@ const WithCoordinates = () => {
     };
 
     const loader = new GLTFLoader(manager);
-    loader.load("/FullMapV4.glb", (gltf) => {
+    loader.load("/final/final.gltf", (gltf) => {
       // loader.load("/TestFBX/Mesh_all.glb", (gltf) => {
 
       const model = gltf.scene;
-      model.scale.set(4, 4, 4);
+      model.scale.set(3, 3, 3);
       scene.add(model);
       const boundingBox = new THREE.Box3().setFromObject(model);
       boundingBoxRef.current = boundingBox;
@@ -217,9 +219,9 @@ const WithCoordinates = () => {
       const applyRandomColors = (object) => {
         if (object instanceof THREE.Mesh) {
           object.material = new THREE.MeshStandardMaterial({
-            color: new THREE.Color(0x9e311a), // Light brown color
-            roughness: 0.5, // Moderate roughness for realistic surface reflection
-            metalness: 0.2, // A bit of metallic look
+            // color: new THREE.Color(0x9e311a), // Light brown color
+            // roughness: 0.5, // Moderate roughness for realistic surface reflection
+            // metalness: 0.2, // A bit of metallic look
             // color: new THREE.Color(Math.random(), Math.random(), Math.random()),
             // roughness: 0.5, // Moderate roughness for realistic surface reflection
             // metalness: 0.2, // A bit of metallic look
@@ -231,6 +233,11 @@ const WithCoordinates = () => {
         // }
       };
 
+      const textureLoader = new THREE.TextureLoader();
+      const floorTexture = textureLoader.load("/BridgeToHeaven.jpg");
+      floorTexture.wrapS = THREE.RepeatWrapping;
+      floorTexture.wrapT = THREE.RepeatWrapping;
+
       // applyRandomColors(model);
 
       // traverse though meshes
@@ -241,6 +248,14 @@ const WithCoordinates = () => {
           // child.receiveShadow = false;
           // applyRandomColors(child);
           child.material.envMap = neutralEnvironment;
+          if (child.name === "Map_3D_TestpCylinder1") {
+            console.log("sfsdfsd");
+            child.material = new THREE.MeshStandardMaterial({
+              ...child.material,
+              map: floorTexture,
+              side: THREE.DoubleSide,
+            });
+          }
           child.material.needsUpdate = true;
         }
       });
@@ -249,7 +264,7 @@ const WithCoordinates = () => {
       const gridDivistions = 400; // number of grid cells, adjust as needed
       cellSizeRef.current = gridSize / gridDivistions;
       const gridHelper = new THREE.GridHelper(gridSize, gridDivistions);
-      gridHelper.position.set(center.x, boundingBox.min.y + 10, center.z); // Align to bottom of model (y-axis)
+      gridHelper.position.set(center.x, boundingBox.min.y, center.z); // Align to bottom of model (y-axis)
       gridHelper.material.color.set(0x00008b); // Set grid color to red
       scene.add(gridHelper);
 
@@ -318,7 +333,6 @@ const WithCoordinates = () => {
         return object instanceof THREE.Mesh;
       });
 
-    const floorNames = ["S1", "S2", "S3", "S4"];
     if (intersectedObject && !floorNames.includes(intersectedObject?.name)) {
       if (
         previousIntersectedRef.current &&
@@ -338,7 +352,7 @@ const WithCoordinates = () => {
 
       //   clone material to itself for avoiding updating the meshes which use the same material
       intersectedObject.material = intersectedObject.material.clone();
-      intersectedObject.material.color.set(0xff0000);
+      // intersectedObject.material.color.set(0xff0000);
       intersectedObject.material.needsUpdate = true;
 
       previousIntersectedRef.current = intersectedObject;
@@ -375,10 +389,44 @@ const WithCoordinates = () => {
         return object instanceof THREE.Mesh;
       });
 
-    if (intersectedObject) {
+    console.log(
+      "intersected object:::",
+      raycaster.intersectObjects(scene.children, true)[0]
+    );
+    const uvCoordinates = getUVCoordinates(intersectedObject);
+
+    if (intersectedObject && !floorNames.includes(intersectedObject?.name)) {
       //   get the intersected object's coordinates
       const coordinates = getCoordinates(intersectedObject);
     }
+  };
+
+  const getUVCoordinates = (intersectedObject: THREE.Mesh) => {
+    const uvAttribute = intersectedObject?.geometry.attributes.uv;
+    if (!uvAttribute) return;
+
+    let minU = Infinity,
+      minV = Infinity;
+    let maxU = -Infinity,
+      maxV = -Infinity;
+
+    // Loop through the UVs assigned to this mesh
+    for (let i = 0; i < uvAttribute.count; i++) {
+      const u = uvAttribute.getX(i);
+      const v = uvAttribute.getY(i);
+
+      minU = Math.min(minU, u);
+      minV = Math.min(minV, v);
+      maxU = Math.max(maxU, u);
+      maxV = Math.max(maxV, v);
+    }
+
+    // UV width and height of the clicked mesh
+    const uvWidth = maxU - minU;
+    const uvHeight = maxV - minV;
+
+    console.log("Mesh UV Bounds:", { minU, minV, maxU, maxV });
+    console.log("UV Width:", uvWidth, "UV Height:", uvHeight);
   };
 
   const getCoordinates = (intersectedObject: THREE.Mesh) => {
