@@ -106,8 +106,8 @@ const Home = () => {
           </p>
         </div>
       </div> */}
-      {/* <WithCoordinates /> */}
-      <BuildingViewer />
+      <WithCoordinates />
+      {/* <BuildingViewer /> */}
       {/* <WithCoordinates2D /> */}
       {/* <MapWithAds /> */}
       {/* <GridOverlay /> */}

@@ -202,11 +202,11 @@ const WithCoordinates = () => {
     };
 
     const loader = new GLTFLoader(manager);
-    loader.load("/final/final.gltf", (gltf) => {
+    loader.load("/FullMapV4.glb", (gltf) => {
       // loader.load("/TestFBX/Mesh_all.glb", (gltf) => {
 
       const model = gltf.scene;
-      model.scale.set(3, 3, 3);
+      model.scale.set(6, 6, 6);
       scene.add(model);
       const boundingBox = new THREE.Box3().setFromObject(model);
       boundingBoxRef.current = boundingBox;

@@ -55,7 +55,25 @@ const BuildingViewer = () => {
       "/final/final.gltf",
       (gltf) => {
         model = gltf.scene;
+        let i = 0;
+        model.traverse((child) => {
+          if (child instanceof THREE.Mesh) {
+            //  add incremental ids to each mesh
+            i++;
+            child.name = "mesh" + i;
+            child.castShadow = true;
+            child.receiveShadow;
+
+            // if (i === 11) {
+            //   const loader = new THREE.TextureLoader();
+            //   const texture = loader.load("/final/B_D_A_baseColor.png");
+            //   child.material.map = texture;
+            //   child.material.needsUpdate = true;
+            // }
+          }
+        });
         scene.add(model);
+
         setIsLoading(false);
       },
       (xhr) => {
@@ -105,64 +123,25 @@ const BuildingViewer = () => {
         console.log("clicked intersec:", intersect);
 
         // Update the texture with an overlay
-        updateTextureWithOverlay(
-          "/final/B_D_A_normal.png",
-          "/RedFish.jpg",
-          [
-            { x: 0.22937750816345215, y: 0.24684059619903564 },
-            { x: 0.22937750816345215, y: 0.204645574092865 },
-            { x: 0.21775352954864502, y: 0.204645574092865 },
-            { x: 0.21775352954864502, y: 0.24684059619903564 },
-          ],
-          (updatedTexture) => {
-            model.traverse((child) => {
-              // update textures
-              if (child instanceof THREE.Mesh) {
-                // child.material.normalMap = updatedTexture;
-                child.material.needsUpdate = true;
-              }
-            });
-          }
-        );
-        updateTextureWithOverlay(
-          "/final/B_D_A_baseColor.png",
-          "/RedFish.jpg",
-          [
-            { x: 0.22937750816345215, y: 0.24684059619903564 },
-            { x: 0.22937750816345215, y: 0.204645574092865 },
-            { x: 0.21775352954864502, y: 0.204645574092865 },
-            { x: 0.21775352954864502, y: 0.24684059619903564 },
-          ],
-          (updatedTexture) => {
-            model.traverse((child) => {
-              // update textures
-              if (child instanceof THREE.Mesh) {
-                child.material.map = updatedTexture;
-                child.material.needsUpdate = true;
-              }
-            });
-          }
-        );
-        updateTextureWithOverlay(
-          "/final/B_D_A_occlusionRoughnessMetallic.png",
-          "/RedFish.jpg",
-          [
-            { x: 0.22937750816345215, y: 0.24684059619903564 },
-            { x: 0.22937750816345215, y: 0.204645574092865 },
-            { x: 0.21775352954864502, y: 0.204645574092865 },
-            { x: 0.21775352954864502, y: 0.24684059619903564 },
-          ],
-          (updatedTexture) => {
-            model.traverse((child) => {
-              // update textures
-              if (child instanceof THREE.Mesh) {
-                // child.material.roughnessMap = updatedTexture;
-                // child.material.metalnessMap = updatedTexture;
-                child.material.needsUpdate = true;
-              }
-            });
-          }
-        );
+        // updateTextureWithOverlay(
+        //   "/final/B_D_A_baseColor.png",
+        //   "/NightCity.jpg",
+        //   [
+        //     { x: 0.22937750816345215, y: 0.24684059619903564 },
+        //     { x: 0.22937750816345215, y: 0.204645574092865 },
+        //     { x: 0.21775352954864502, y: 0.204645574092865 },
+        //     { x: 0.21775352954864502, y: 0.24684059619903564 },
+        //   ],
+        //   (updatedTexture) => {
+        //     model.traverse((child) => {
+        //       // update textures
+        //       if (child instanceof THREE.Mesh && child.name === "mesh12") {
+        //         child.material.map = updatedTexture;
+        //         child.material.needsUpdate = true;
+        //       }
+        //     });
+        //   }
+        // );
       }
     }
 
@@ -228,9 +207,15 @@ const BuildingViewer = () => {
 
       // Create a canvas with the same size as the texture
       const canvas = document.createElement("canvas");
-      canvas.width = textureImg.width;
-      canvas.height = textureImg.height;
+
+      const scaleFac = 1;
+
+      canvas.width = textureImg.width * scaleFac;
+      canvas.height = textureImg.height * scaleFac;
       const ctx = canvas.getContext("2d")!;
+
+      // ctx.imageSmoothingEnabled=true
+      // ctx.imageSmoothingQuality = "high";
 
       // Draw the base texture
       ctx.drawImage(textureImg, 0, 0);
@@ -238,7 +223,7 @@ const BuildingViewer = () => {
       // Convert UV coordinates to pixel positions
       const toCanvasCoords = (uv: { x: number; y: number }) => ({
         x: uv.x * canvas.width,
-        y: (1 - uv.y) * canvas.height, // Flip Y because UV (0,0) is bottom-left
+        y: (uv.y) * canvas.height,
       });
 
       const pixels = uvCoords.map(toCanvasCoords);
@@ -253,14 +238,45 @@ const BuildingViewer = () => {
       ctx.closePath();
       ctx.clip(); // Only draw inside this area
 
-      // Fit overlay into the selected UV area
+      // Calculate the bounding box of the UV area
+      const minX = Math.min(pixels[0].x, pixels[1].x, pixels[2].x, pixels[3].x);
+      const minY = Math.min(pixels[0].y, pixels[1].y, pixels[2].y, pixels[3].y);
+      const maxX = Math.max(pixels[0].x, pixels[1].x, pixels[2].x, pixels[3].x);
+      const maxY = Math.max(pixels[0].y, pixels[1].y, pixels[2].y, pixels[3].y);
+
+      const width = maxX - minX;
+      const height = maxY - minY;
+
+      // Draw the overlay image onto the main canvas without resizing
       ctx.drawImage(
         overlayImg,
-        pixels[0].x,
-        pixels[0].y,
-        pixels[2].x - pixels[0].x, // Width
-        pixels[2].y - pixels[0].y // Height
+        minX,
+        minY,
+        width * scaleFac,
+        height * scaleFac
       );
+      console.log(
+        "minX:",
+        minX,
+        "\nminY:",
+        minY,
+        "\nmaxX:",
+        maxX,
+        "\nmaxY:",
+        maxY,
+        "\nwidth:",
+        width,
+        "\nheight:",
+        height
+      );
+      // Fit overlay into the selected UV area
+      // ctx.drawImage(
+      //   overlayImg,
+      //   pixels[0].x,
+      //   pixels[0].y,
+      //   pixels[2].x - pixels[0].x, // Width
+      //   pixels[2].y - pixels[0].y // Height
+      // );
 
       ctx.restore();
 
