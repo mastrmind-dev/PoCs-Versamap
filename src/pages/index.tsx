@@ -8,6 +8,7 @@ import WithCoordinates2D from "../components/WithCoordinates2D";
 import { useState } from "react";
 import MapWithAds from "../components/MapWithAds";
 import BuildingViewer from "../components/BuildingViewer";
+import WithCoordinatesHighTextu from "../components/WithCoordinates_highQualityTextu";
 
 const Map = dynamic(() => import("../components/LeafletMap"), { ssr: false });
 
@@ -106,8 +107,9 @@ const Home = () => {
           </p>
         </div>
       </div> */}
-      <WithCoordinates />
-      {/* <BuildingViewer /> */}
+      {/* <WithCoordinates /> */}
+      {/* <WithCoordinatesHighTextu /> */}
+      <BuildingViewer />
       {/* <WithCoordinates2D /> */}
       {/* <MapWithAds /> */}
       {/* <GridOverlay /> */}

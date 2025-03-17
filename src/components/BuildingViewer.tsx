@@ -52,7 +52,8 @@ const BuildingViewer = () => {
     const loader = new GLTFLoader();
     let model;
     loader.load(
-      "/final/final.gltf",
+      // "/final/final.gltf",
+      "/bluemap/Map2.gltf",
       (gltf) => {
         model = gltf.scene;
         let i = 0;
@@ -124,24 +125,40 @@ const BuildingViewer = () => {
 
         // Update the texture with an overlay
         // updateTextureWithOverlay(
-        //   "/final/B_D_A_baseColor.png",
-        //   "/NightCity.jpg",
+        //   "/bluemap/Billboard_baseColor.png",
+        //   "/MountainValley.jpg",
         //   [
-        //     { x: 0.22937750816345215, y: 0.24684059619903564 },
-        //     { x: 0.22937750816345215, y: 0.204645574092865 },
-        //     { x: 0.21775352954864502, y: 0.204645574092865 },
-        //     { x: 0.21775352954864502, y: 0.24684059619903564 },
+        //     // { x: 0.22937750816345215, y: 0.24684059619903564 },
+        //     // { x: 0.22937750816345215, y: 0.204645574092865 },
+        //     // { x: 0.21775352954864502, y: 0.204645574092865 },
+        //     // { x: 0.21775352954864502, y: 0.24684059619903564 },
+        //     { x: 0.6398108005523682, y: 0.10414254665374756 },
+        //     { x: 0.6398108005523682, y: 0.1568681001663208 },
+        //     { x: 0.6492781639099121, y: 0.1568681001663208 },
+        //     { x: 0.6492781639099121, y: 0.10414254665374756 },
         //   ],
         //   (updatedTexture) => {
         //     model.traverse((child) => {
         //       // update textures
-        //       if (child instanceof THREE.Mesh && child.name === "mesh12") {
+        //       if (child instanceof THREE.Mesh /*&& child.name === "mesh12"*/) {
         //         child.material.map = updatedTexture;
         //         child.material.needsUpdate = true;
         //       }
         //     });
         //   }
         // );
+        const textureLoader = new THREE.TextureLoader();
+        const texture = textureLoader.load(
+          "/bluemap/Billboard_baseColor.png",
+          () => {
+            model.traverse((child) => {
+              if (child instanceof THREE.Mesh /*&& child.name === "mesh12"*/) {
+                child.material.map = texture;
+                child.material.needsUpdate = true;
+              }
+            });
+          }
+        );
       }
     }
 
@@ -223,7 +240,7 @@ const BuildingViewer = () => {
       // Convert UV coordinates to pixel positions
       const toCanvasCoords = (uv: { x: number; y: number }) => ({
         x: uv.x * canvas.width,
-        y: (uv.y) * canvas.height,
+        y: uv.y * canvas.height,
       });
 
       const pixels = uvCoords.map(toCanvasCoords);
