@@ -9,6 +9,9 @@ import { useState } from "react";
 import MapWithAds from "../components/MapWithAds";
 import BuildingViewer from "../components/BuildingViewer";
 import WithCoordinatesHighTextu from "../components/WithCoordinates_highQualityTextu";
+import KTX2Viewer from "../components/KTX2Viewer";
+import Alternative from "../components/Alternative";
+import TwoDEnhancement from "../components/2d_enhance";
 
 const Map = dynamic(() => import("../components/LeafletMap"), { ssr: false });
 
@@ -108,8 +111,11 @@ const Home = () => {
         </div>
       </div> */}
       {/* <WithCoordinates /> */}
+      <TwoDEnhancement />
+      {/* <Alternative /> */}
       {/* <WithCoordinatesHighTextu /> */}
-      <BuildingViewer />
+      {/* <BuildingViewer /> */}
+      {/* <KTX2Viewer /> */}
       {/* <WithCoordinates2D /> */}
       {/* <MapWithAds /> */}
       {/* <GridOverlay /> */}

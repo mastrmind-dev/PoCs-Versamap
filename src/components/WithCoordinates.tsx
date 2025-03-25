@@ -202,9 +202,8 @@ const WithCoordinates = () => {
     };
 
     const loader = new GLTFLoader(manager);
-    loader.load("/FullMapV4.glb", (gltf) => {
-      // loader.load("/TestFBX/Mesh_all.glb", (gltf) => {
-
+    // loader.load("/FullMapV4.glb", (gltf) => {
+    loader.load("/2d_enhanced/bottom.glb", (gltf) => {
       const model = gltf.scene;
       model.scale.set(6, 6, 6);
       scene.add(model);
@@ -341,7 +340,7 @@ const WithCoordinates = () => {
         (
           previousIntersectedRef.current.material as THREE.MeshStandardMaterial
         ).color.copy(previousIntersectedRef.current.userData.originalColor);
-        // previousIntersectedRef.current.meterial.needsUpdate = true;
+        // previousIntersectedRef.current.material.needsUpdate = true;
       }
 
       //   store original color if it is not inluded as userData
@@ -352,7 +351,7 @@ const WithCoordinates = () => {
 
       //   clone material to itself for avoiding updating the meshes which use the same material
       intersectedObject.material = intersectedObject.material.clone();
-      // intersectedObject.material.color.set(0xff0000);
+      intersectedObject.material.color.set(0xff0000);
       intersectedObject.material.needsUpdate = true;
 
       previousIntersectedRef.current = intersectedObject;
@@ -389,10 +388,8 @@ const WithCoordinates = () => {
         return object instanceof THREE.Mesh;
       });
 
-    console.log(
-      "intersected object:::",
-      raycaster.intersectObjects(scene.children, true)[0]
-    );
+    console.log("intersected object:::", intersectedObject);
+
     const uvCoordinates = getUVCoordinates(intersectedObject);
 
     if (intersectedObject && !floorNames.includes(intersectedObject?.name)) {

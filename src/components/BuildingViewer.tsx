@@ -5,10 +5,31 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { KTX2Loader } from "three/examples/jsm/loaders/KTX2Loader";
 
 const BuildingViewer = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const textureArray = [
+    "Billboard_baseColor.png",
+    "Billboard_emissive.png",
+    "Billboard_normal.png",
+    "Billboard_occlusionRoughnessMetallic.png",
+    "Building_baseColor.png",
+    "Building_emissive.png",
+    "Building_Floor_baseColor.png",
+    "Building_Floor_emissive.png",
+    "Building_Floor_normal.png",
+    "Building_Floor_occlusionRoughnessMetallic.png",
+    "Building_normal.png",
+    "Building_occlusionRoughnessMetallic.png",
+    "Floor_baseColor.png",
+    "Floor_emissive.png",
+    "Floor_normal.png",
+    "Floor_occlusionRoughnessMetallic.png",
+    
+  ];
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -48,8 +69,17 @@ const BuildingViewer = () => {
     controls.enableDamping = true;
     controls.dampingFactor = 0.25;
 
+    // Enable GPU Compressed Texture Support
+    const ktx2Loader = new KTX2Loader()
+      .setTranscoderPath(
+        "https://unpkg.com/three@latest/examples/jsm/libs/basis/"
+      ) // Path to Basis transcoder
+      .detectSupport(renderer);
+
     // Load the .glb model
     const loader = new GLTFLoader();
+    loader.setResourcePath("/bluemapv2/");
+    loader.setKTX2Loader(ktx2Loader);
     let model;
     loader.load(
       // "/final/final.gltf",
@@ -103,7 +133,9 @@ const BuildingViewer = () => {
       const intersects = raycaster.intersectObject(model, true);
       if (intersects.length > 0) {
         const intersect = intersects[0];
+        console.log("Clicked object:", intersect.object);
         const object = intersect.object as THREE.Mesh;
+        let material = object.material as THREE.MeshStandardMaterial;
 
         if (!object.geometry || !intersect.face) return;
 
@@ -124,41 +156,64 @@ const BuildingViewer = () => {
         console.log("clicked intersec:", intersect);
 
         // Update the texture with an overlay
-        // updateTextureWithOverlay(
-        //   "/bluemap/Billboard_baseColor.png",
-        //   "/MountainValley.jpg",
-        //   [
-        //     // { x: 0.22937750816345215, y: 0.24684059619903564 },
-        //     // { x: 0.22937750816345215, y: 0.204645574092865 },
-        //     // { x: 0.21775352954864502, y: 0.204645574092865 },
-        //     // { x: 0.21775352954864502, y: 0.24684059619903564 },
-        //     { x: 0.6398108005523682, y: 0.10414254665374756 },
-        //     { x: 0.6398108005523682, y: 0.1568681001663208 },
-        //     { x: 0.6492781639099121, y: 0.1568681001663208 },
-        //     { x: 0.6492781639099121, y: 0.10414254665374756 },
-        //   ],
-        //   (updatedTexture) => {
-        //     model.traverse((child) => {
-        //       // update textures
-        //       if (child instanceof THREE.Mesh /*&& child.name === "mesh12"*/) {
-        //         child.material.map = updatedTexture;
-        //         child.material.needsUpdate = true;
-        //       }
-        //     });
-        //   }
-        // );
-        const textureLoader = new THREE.TextureLoader();
-        const texture = textureLoader.load(
+        updateTextureWithOverlay(
           "/bluemap/Billboard_baseColor.png",
-          () => {
+          "/MountainValley.jpg",
+          [
+            // { x: 0.22937750816345215, y: 0.24684059619903564 },
+            // { x: 0.22937750816345215, y: 0.204645574092865 },
+            // { x: 0.21775352954864502, y: 0.204645574092865 },
+            // { x: 0.21775352954864502, y: 0.24684059619903564 },
+            { x: 0.6398108005523682, y: 0.10414254665374756 },
+            { x: 0.6398108005523682, y: 0.1568681001663208 },
+            { x: 0.6492781639099121, y: 0.1568681001663208 },
+            { x: 0.6492781639099121, y: 0.10414254665374756 },
+          ],
+          (updatedTexture) => {
             model.traverse((child) => {
+              // update textures
               if (child instanceof THREE.Mesh /*&& child.name === "mesh12"*/) {
-                child.material.map = texture;
+                child.material.map = updatedTexture;
                 child.material.needsUpdate = true;
               }
             });
           }
         );
+
+        // const textureLoader = new THREE.TextureLoader();
+        // const texture = textureLoader.load(
+        //   "/Billboard_baseColor.ktx2",
+        //   (texture) => {
+        //     material = material.clone();
+        //     material.map = texture;
+        //     material.map.flipY = false;
+        //     material.side = THREE.DoubleSide;
+        //     material.needsUpdate = true;
+        //     material.map.needsUpdate = true;
+        //     object.material = material;
+        //   }
+        // );
+
+        // Enable GPU Compressed Texture Support
+        const ktx2Loader = new KTX2Loader()
+          .setTranscoderPath(
+            "https://unpkg.com/three@latest/examples/jsm/libs/basis/"
+          ) // Path to Basis transcoder
+          .detectSupport(renderer);
+
+        // Load a compressed texture
+        ktx2Loader.load("/bluemap//Billboard_baseColor.ktx2", (texture) => {
+          texture.colorSpace = THREE.SRGBColorSpace;
+          texture.minFilter = THREE.LinearMipmapLinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          texture.generateMipmaps = true;
+
+          material.map = texture;
+          material.needsUpdate = true;
+        });
+
+        // object.material = newMaterial;
+        // scene.environment = neutralEnvironment;
       }
     }
 
@@ -301,7 +356,7 @@ const BuildingViewer = () => {
       const a = document.createElement("a");
       a.href = canvas.toDataURL("image/png");
       a.download = "texture.png";
-      a.click();
+      // a.click();
 
       // Convert canvas to a texture
       const updatedTexture = new THREE.Texture(canvas);
