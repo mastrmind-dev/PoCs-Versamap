@@ -112,7 +112,7 @@ const Home = () => {
         </div>
       </div> */}
       <WithCoordinates />
-      <TwoDEnhancement />
+      {/* <TwoDEnhancement /> */}
       <LogoLayer />
       {/* <Alternative /> */}
       {/* <WithCoordinatesHighTextu /> */}
