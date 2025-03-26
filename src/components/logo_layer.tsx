@@ -109,11 +109,17 @@ const LogoLayer = () => {
       }
     };
 
-    camera.position.set(0, 120, 200); // Position the camera
+    camera.position.set(0, 100, 0); // Position the camera
 
     // Orbit Controls Setup
     const controls = new OrbitControls(camera, renderer.domElement);
     // controls.enableRotate = false;
+    controls.enablePan = true; // Enable panning
+    controls.mouseButtons = {
+      LEFT: THREE.MOUSE.PAN, // Set left mouse button to pan
+      MIDDLE: THREE.MOUSE.DOLLY,
+      RIGHT: THREE.MOUSE.ROTATE,
+    };
     controls.update();
 
     function animate() {
