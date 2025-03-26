@@ -69,11 +69,13 @@ const TwoDEnhancement = () => {
 
     // Add event listener to check zoom level
     controls.addEventListener("change", () => {
+      const zoomDistance = camera.position.distanceTo(controls.target); // Calculate zoom distance
+      console.log("zoom distance:", zoomDistance);
       console.log("camera position:", camera.position.z);
-      if (camera.position.z < 0.00005 && !shouldSkyRemove) {
+      if (zoomDistance < 5 && !shouldSkyRemove) {
         setShouldSkyRemove(true);
       }
-      if (camera.position.z >= 0.00005) {
+      if (zoomDistance >= 5) {
         console.log("sky added");
         setShouldSkyRemove(false);
       }

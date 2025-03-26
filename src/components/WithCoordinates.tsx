@@ -203,7 +203,7 @@ const WithCoordinates = () => {
 
     const loader = new GLTFLoader(manager);
     // loader.load("/FullMapV4.glb", (gltf) => {
-    loader.load("/2d_enhanced/bottom.glb", (gltf) => {
+    loader.load("/FullMapV4.glb", (gltf) => {
       const model = gltf.scene;
       model.scale.set(6, 6, 6);
       scene.add(model);

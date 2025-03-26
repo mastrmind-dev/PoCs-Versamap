@@ -12,6 +12,7 @@ import WithCoordinatesHighTextu from "../components/WithCoordinates_highQualityT
 import KTX2Viewer from "../components/KTX2Viewer";
 import Alternative from "../components/Alternative";
 import TwoDEnhancement from "../components/2d_enhance";
+import LogoLayer from "../components/logo_layer";
 
 const Map = dynamic(() => import("../components/LeafletMap"), { ssr: false });
 
@@ -110,8 +111,9 @@ const Home = () => {
           </p>
         </div>
       </div> */}
-      {/* <WithCoordinates /> */}
+      <WithCoordinates />
       <TwoDEnhancement />
+      <LogoLayer />
       {/* <Alternative /> */}
       {/* <WithCoordinatesHighTextu /> */}
       {/* <BuildingViewer /> */}
