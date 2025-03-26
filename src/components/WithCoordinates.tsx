@@ -247,14 +247,7 @@ const WithCoordinates = () => {
           // child.receiveShadow = false;
           // applyRandomColors(child);
           child.material.envMap = neutralEnvironment;
-          if (child.name === "Map_3D_TestpCylinder1") {
-            console.log("sfsdfsd");
-            child.material = new THREE.MeshStandardMaterial({
-              ...child.material,
-              map: floorTexture,
-              side: THREE.DoubleSide,
-            });
-          }
+          child.material.envMapIntensity = 1; 
           child.material.needsUpdate = true;
         }
       });
@@ -454,6 +447,10 @@ const WithCoordinates = () => {
         // border: "5px solid rgb(86, 188, 219)",
         borderRadius: "10px",
         padding: "20px",
+        display: "flex",
+        justifyContent: "center",
+        flexDirection: "column",
+        width: "100vw",
       }}
     >
       <div style={{ display: "flex", flexDirection: "row", gap: "20px" }}>
@@ -507,7 +504,10 @@ const WithCoordinates = () => {
             </style>
           </>
         )}
-        <canvas ref={canvasRef} style={{ opacity: isLoading ? 0.5 : 1 }} />
+        <canvas
+          ref={canvasRef}
+          style={{ opacity: isLoading ? 0.5 : 1, width: "100vw" }}
+        />
       </div>
     </div>
   );
