@@ -111,10 +111,10 @@ const Home = () => {
           </p>
         </div>
       </div> */}
-      <WithCoordinates />
+      {/* <WithCoordinates /> */}
       {/* <TwoDEnhancement /> */}
-      <LogoLayer />
-      {/* <Alternative /> */}
+      {/* <LogoLayer /> */}
+      <Alternative />
       {/* <WithCoordinatesHighTextu /> */}
       {/* <BuildingViewer /> */}
       {/* <KTX2Viewer /> */}
