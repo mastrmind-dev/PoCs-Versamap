@@ -12,6 +12,21 @@ const WithCoordinates2D = () => {
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const boundingBoxRef = useRef<THREE.Box3 | null>(null);
   const cellSizeRef = useRef<number | null>(null);
+  const gridRef = useRef<THREE.GridHelper | null>(null);
+  const planeRef = useRef<THREE.Mesh | null>(null);
+  const textureLoaderRef = useRef<THREE.TextureLoader | null>(null);
+  const planeArrayRef = useRef<THREE.Mesh[]>([]);
+
+  const [shouldLogoLayerRemove, setShouldLogoLayerRemove] =
+    useState<boolean>(false);
+
+  type LogoCoordinatesType = {
+    minX: number;
+    maxX: number;
+    minZ: number;
+    maxZ: number;
+    logoPath: string;
+  };
 
   const [minX, setMinX] = useState<number | null>(null);
   const [maxX, setMaxX] = useState<number | null>(null);
@@ -25,6 +40,10 @@ const WithCoordinates2D = () => {
   const scene = new THREE.Scene();
 
   useEffect(() => {
+    textureLoaderRef.current = new THREE.TextureLoader();
+  }, []);
+
+  useEffect(() => {
     const camera = new THREE.PerspectiveCamera(
       100,
       window.innerWidth / window.innerHeight,
@@ -33,8 +52,6 @@ const WithCoordinates2D = () => {
     );
     cameraRef.current = camera;
     const renderer = new THREE.WebGLRenderer({ canvas: canvasRef.current });
-    // renderer.toneMapping = THREE.LinearToneMapping; // Linear tone mapping
-    // renderer.toneMappingExposure = 1.0; // Exposure equivalent (image shows 0, but default is usually 1)
     renderer.setSize(window.innerWidth - 100, window.innerHeight);
 
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -42,17 +59,9 @@ const WithCoordinates2D = () => {
       new RoomEnvironment()
     ).texture;
 
-    // Ambient Light - softens shadows and brightens everything
     const ambientLight = new THREE.AmbientLight(0xffffff, 1);
     scene.add(ambientLight);
 
-    // const spotlight = new THREE.SpotLight(0xffffff, 1, 10, Math.PI / 6, 0.5, 2);
-    // spotlight.position.set(0, 5, 0); // Position the spotlight
-    // spotlight.target.position.set(10, 0, 10); // Set the target for the spotlight to focus on
-    // scene.add(spotlight);
-    // scene.add(spotlight.target); // Add the spotlight's target to the scene
-
-    // Directional Light - mimics sunlight, casts shadows
     const directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
     directionalLight1.position.set(5, 10, 5);
     directionalLight1.castShadow = true;
@@ -62,20 +71,25 @@ const WithCoordinates2D = () => {
     orbitControls.maxPolarAngle = Math.PI / 2;
     orbitControls.enableRotate = false;
 
-    // Movement settings
+    orbitControls.addEventListener("change", () => {
+      const zoomDistance = camera.position.distanceTo(orbitControls.target);
+      if (zoomDistance < 7 && !shouldLogoLayerRemove) {
+        setShouldLogoLayerRemove(true);
+      }
+      if (zoomDistance >= 7 && shouldLogoLayerRemove) {
+        setShouldLogoLayerRemove(false);
+      }
+    });
+
     const movementSpeed = 0.01;
     const velocity = new THREE.Vector3();
     const direction = new THREE.Vector3();
     const move = { forward: false, backward: false, left: false, right: false };
 
-    // scene.environment = neutralEnvironment;
-    // scene.background = neutralEnvironment;
-
     const textureLoader = new THREE.TextureLoader();
     const floorTexture = textureLoader.load("/Ocean.jpg");
     floorTexture.wrapS = THREE.RepeatWrapping;
     floorTexture.wrapT = THREE.RepeatWrapping;
-    // floorTexture.repeat.set(10, 10);
 
     const manager = new THREE.LoadingManager();
     manager.onStart = function (url, itemsLoaded, itemsTotal) {
@@ -114,13 +128,12 @@ const WithCoordinates2D = () => {
 
     const loader = new GLTFLoader(manager);
     loader.load("/TopViewV2.glb", (gltf) => {
-      // loader.load("/TestFBX/Mesh_all.glb", (gltf) => {
       const model = gltf.scene;
       model.scale.set(3, 3, 3);
 
       scene.background = floorTexture;
-
       scene.add(model);
+
       const boundingBox = new THREE.Box3().setFromObject(model);
       boundingBoxRef.current = boundingBox;
       const size = new THREE.Vector3();
@@ -128,46 +141,75 @@ const WithCoordinates2D = () => {
       const center = new THREE.Vector3();
       boundingBox.getCenter(center);
 
-      // add random colors to meshes
-      const applyRandomColors = (object) => {
-        if (object instanceof THREE.Mesh) {
-          object.material = new THREE.MeshStandardMaterial({
-            color: new THREE.Color(0x9e311a), // Light brown color
-            roughness: 0.5, // Moderate roughness for realistic surface reflection
-            metalness: 0.2, // A bit of metallic look
-            // color: new THREE.Color(Math.random(), Math.random(), Math.random()),
-            // roughness: 0.5, // Moderate roughness for realistic surface reflection
-            // metalness: 0.2, // A bit of metallic look
-            // emissive: new THREE.Color(0, 0, 0), // No em
+      // Calculate grid size based on the scaled model
+      const gridSize = Math.max(size.x, size.z);
+      const gridDivisions = 400; // Keep this constant regardless of model scale
+      cellSizeRef.current = gridSize / gridDivisions;
+
+      // Create and add grid helper
+      const gridHelper = new THREE.GridHelper(gridSize, gridDivisions);
+      gridHelper.position.set(center.x, boundingBox.min.y + 0.3, center.z);
+      gridHelper.material.opacity = 0.2;
+      gridHelper.material.transparent = true;
+      gridRef.current = gridHelper;
+      scene.add(gridHelper);
+
+      const createLogoPlanes = (coordinatesArr: LogoCoordinatesType[]) => {
+        if (
+          !textureLoaderRef.current ||
+          !cellSizeRef.current ||
+          !boundingBoxRef.current
+        )
+          return;
+
+        const gridCellSize = cellSizeRef.current;
+
+        for (const coordinates of coordinatesArr) {
+          const { minX, maxX, minZ, maxZ, logoPath } = coordinates;
+          const texture = textureLoaderRef.current.load(logoPath);
+
+          // Calculate dimensions in world units
+          const planeWidth = Math.abs(maxX - minX) * gridCellSize;
+          const planeHeight = Math.abs(maxZ - minZ) * gridCellSize;
+
+          const planeGeometry = new THREE.PlaneGeometry(
+            planeWidth,
+            planeHeight
+          );
+          const planeMaterial = new THREE.MeshBasicMaterial({
+            map: texture,
+            side: THREE.DoubleSide,
+            transparent: true,
+            opacity: 0.7, // Changed from 0.8 to 0.7 (70% opacity)
           });
+
+          const plane = new THREE.Mesh(planeGeometry, planeMaterial);
+          plane.rotation.x = -Math.PI / 2; // Make horizontal
+
+          // Calculate world position based on grid coordinates
+          const planeCenterX =
+            center.x + (minX + (maxX - minX) / 2) * gridCellSize;
+          const planeCenterZ =
+            center.z + (minZ + (maxZ - minZ) / 2) * gridCellSize;
+
+          plane.position.set(
+            planeCenterX,
+            boundingBoxRef.current.min.y + 1.5,
+            planeCenterZ
+          );
+
+          scene.add(plane);
+          planeArrayRef.current.push(plane);
         }
-        // if (object.children && object.children.length > 0) {
-        //   object.children.forEach((child) => applyRandomColors(child));
-        // }
       };
 
-      // applyRandomColors(model);
-
-      // traverse though meshes
-      model.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          // console.log("child:::", child);
-          // child.material = new THREE.MeshBasicMaterial({ color: 0x00ffff });
-          // child.castShadow = false;
-          // child.receiveShadow = false;
-          // applyRandomColors(child);
-          //   child.material.envMap = neutralEnvironment;
-          //   child.material.needsUpdate = true;
-        }
-      });
-
-      const gridSize = Math.max(size.x, size.z);
-      const gridDivistions = 400 * 30; // number of grid cells, adjust as needed
-      cellSizeRef.current = (gridSize * 30) / gridDivistions;
-      const gridHelper = new THREE.GridHelper(gridSize * 30, gridDivistions);
-      gridHelper.position.set(center.x, boundingBox.min.y + 0.3, center.z); // Align to bottom of model (y-axis)
-      gridHelper.material.color.set(0x00008b); // Set grid color to dark blue
-      scene.add(gridHelper);
+      // Add logo planes with adjusted coordinates
+      createLogoPlanes([
+        { minX: -78, maxX: -70, minZ: 70, maxZ: 78, logoPath: "/facebook.jpg" },
+        { minX: -20, maxX: -12, minZ: 12, maxZ: 20, logoPath: "/google.jpg" },
+        { minX: -10, maxX: -4, minZ: 70, maxZ: 80, logoPath: "/apple.jpg" },
+        { minX: 32, maxX: 40, minZ: 50, maxZ: 60, logoPath: "/microsoft.jpeg" },
+      ]);
 
       camera.position.set(0, 100, 0);
 
@@ -190,12 +232,27 @@ const WithCoordinates2D = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (shouldLogoLayerRemove) {
+      scene.remove(gridRef.current);
+      planeArrayRef.current.forEach((plane) => {
+        scene.remove(plane);
+      });
+    } else {
+      if (gridRef.current) {
+        scene.add(gridRef.current);
+      }
+      planeArrayRef.current.forEach((plane) => {
+        scene.add(plane);
+      });
+    }
+  }, [shouldLogoLayerRemove]);
+
   const onMouseMove = (event) => {
     if (!canvasRef.current) return;
     const canvasBounds = canvasRef.current.getBoundingClientRect();
     if (!canvasBounds) return;
 
-    // Calculate mouse position in normalized device coordinates
     mouse.x =
       ((event.clientX - canvasBounds.left) / canvasBounds.width) * 2 - 1;
     mouse.y =
@@ -205,60 +262,57 @@ const WithCoordinates2D = () => {
 
     const intersects = raycaster.intersectObjects(scene.children, true);
     const intersectedObject = intersects
-      .map((intersect) => {
-        return intersect.object;
-      })
-      .find((object) => {
-        return object instanceof THREE.Mesh;
-      });
+      .map((intersect) => intersect.object)
+      .find((object) => object instanceof THREE.Mesh);
 
-    // console.log("intersected obj:::", intersectedObject);
-
+    const isLogoPlane = planeArrayRef.current.includes(intersectedObject);
     const floorNames = [
       "polySurface4456_1",
       "polySurface4435_1",
       "polySurface4442_1",
       "polySurface4449_1",
     ];
-    // console.log("intersected id:::", intersectedObject?.id);
-    if (intersectedObject && !floorNames.includes(intersectedObject?.name)) {
-      if (
-        previousIntersectedRef.current &&
-        previousIntersectedRef.current !== intersectedObject
-      ) {
-        (
-          previousIntersectedRef.current.material as THREE.MeshStandardMaterial
-        ).color.copy(previousIntersectedRef.current.userData.originalColor);
-        // previousIntersectedRef.current.meterial.needsUpdate = true;
+
+    // Always reset previous highlighted object if it exists and we're not hovering over it
+    if (
+      previousIntersectedRef.current &&
+      previousIntersectedRef.current !== intersectedObject
+    ) {
+      if (planeArrayRef.current.includes(previousIntersectedRef.current)) {
+        // Reset logo opacity to 70%
+        (previousIntersectedRef.current.material as THREE.MeshBasicMaterial).opacity = 0.7;
+      } else {
+        // Reset building material
+        (previousIntersectedRef.current.material as THREE.MeshStandardMaterial)
+          .color.copy(previousIntersectedRef.current.userData.originalColor);
+        (previousIntersectedRef.current.material as THREE.MeshStandardMaterial)
+          .emissive.set(0x000000);
       }
+      previousIntersectedRef.current = null;
+    }
 
-      //   store original color if it is not inluded as userData
-      if (!intersectedObject.userData.originalColor) {
-        intersectedObject.userData.originalColor =
-          intersectedObject.material.color.clone();
-      }
+    if (intersectedObject) {
+      if (isLogoPlane) {
+        // Handle logo hover
+        (intersectedObject.material as THREE.MeshBasicMaterial).opacity = 1;
+        previousIntersectedRef.current = intersectedObject;
+      } else if (!floorNames.includes(intersectedObject?.name)) {
+        // Store original color if not already stored
+        if (!intersectedObject.userData.originalColor) {
+          intersectedObject.userData.originalColor =
+            intersectedObject.material.color.clone();
+        }
 
-      //   clone material to itself for avoiding updating the meshes which use the same material
-      intersectedObject.material = intersectedObject.material.clone();
-      intersectedObject.material.emissive.set(0xff0000); // Bright red glow
-      intersectedObject.material.emissiveIntensity = 1;
+        // Handle building hover
+        intersectedObject.material = intersectedObject.material.clone();
+        intersectedObject.material.emissive.set(0xff0000);
+        intersectedObject.material.emissiveIntensity = 1;
+        intersectedObject.material.color.set(0x0000ff);
+        intersectedObject.material.transparent = false;
+        intersectedObject.material.opacity = 1;
+        intersectedObject.material.needsUpdate = true;
 
-      // intersectedObject.material.baseMap = 0x000000;
-
-      intersectedObject.material.color.set(0x0000ff); // Yellow color
-      intersectedObject.material.transparent = false; // Ensure transparency is disabled
-      // intersectedObject.material.color.convertSRGBToLinear();
-      intersectedObject.material.opacity = 1;
-      intersectedObject.material.needsUpdate = true;
-
-      previousIntersectedRef.current = intersectedObject;
-    } else {
-      if (previousIntersectedRef.current) {
-        (
-          previousIntersectedRef.current.material as THREE.MeshStandardMaterial
-        ).color.copy(previousIntersectedRef.current.userData.originalColor);
-        // previousIntersectedRef.current.material.needsUpdate = true;
-        previousIntersectedRef.current = null;
+        previousIntersectedRef.current = intersectedObject;
       }
     }
   };
@@ -267,7 +321,6 @@ const WithCoordinates2D = () => {
     const canvasBounds = canvasRef.current.getBoundingClientRect();
     if (!canvasBounds) return;
 
-    // Calculate mouse position in normalized device coordinates
     mouse.x =
       ((event.clientX - canvasBounds.left) / canvasBounds.width) * 2 - 1;
     mouse.y =
@@ -276,7 +329,6 @@ const WithCoordinates2D = () => {
     raycaster.setFromCamera(mouse, cameraRef.current);
 
     const intersects = raycaster.intersectObjects(scene.children, true);
-    // console.log("intersects:::", intersects);
     const intersectedObject = intersects
       .map((intersect) => {
         return intersect.object;
@@ -285,10 +337,7 @@ const WithCoordinates2D = () => {
         return object instanceof THREE.Mesh;
       });
 
-    console.log("intersected object:::", intersectedObject);
-
     if (intersectedObject) {
-      //   get the intersected object's coordinates
       const coordinates = getCoordinates(intersectedObject);
     }
   };
@@ -318,7 +367,6 @@ const WithCoordinates2D = () => {
   return (
     <div
       style={{
-        // border: "5px solid rgb(86, 188, 219)",
         borderRadius: "10px",
         padding: "20px",
       }}

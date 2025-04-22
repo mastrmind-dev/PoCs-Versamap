@@ -114,11 +114,11 @@ const Home = () => {
       {/* <WithCoordinates /> */}
       {/* <TwoDEnhancement /> */}
       {/* <LogoLayer /> */}
-      <Alternative />
+      {/* <Alternative /> */}
       {/* <WithCoordinatesHighTextu /> */}
       {/* <BuildingViewer /> */}
       {/* <KTX2Viewer /> */}
-      {/* <WithCoordinates2D /> */}
+      <WithCoordinates2D />
       {/* <MapWithAds /> */}
       {/* <GridOverlay /> */}
       {/* <LocationTracker /> */}
